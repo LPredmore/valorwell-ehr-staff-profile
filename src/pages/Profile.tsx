@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useProfile, useUpdateProfile } from '@/hooks/useProfile';
 import { Loader2 } from 'lucide-react';
+import { Layout } from '@/components/layout/Layout';
 
 export const Profile: React.FC = () => {
   const { data: profile, isLoading } = useProfile();
@@ -44,34 +45,46 @@ export const Profile: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-2xl">
-      <Card>
-        <CardHeader>
-          <CardTitle>Profile Settings</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={profile.email || ''}
-                disabled
-                className="bg-muted"
-              />
-              <p className="text-sm text-muted-foreground mt-1">
-                Email cannot be changed here. Please contact support if needed.
-              </p>
-            </div>
-            <div className="text-center py-4">
-              <p className="text-muted-foreground">
-                Personal information like name and phone are managed in your role-specific profile.
-              </p>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+    <Layout>
+      <div className="container mx-auto p-6 max-w-2xl">
+        <Card>
+          <CardHeader>
+            <CardTitle>Profile Settings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={profile.email || ''}
+                  disabled
+                  className="bg-muted"
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  Email cannot be changed here. Please contact support if needed.
+                </p>
+              </div>
+              <div>
+                <Label htmlFor="role">Role</Label>
+                <Input
+                  id="role"
+                  type="text"
+                  value={profile.role?.[0] || 'No role assigned'}
+                  disabled
+                  className="bg-muted"
+                />
+              </div>
+              <div className="text-center py-4">
+                <p className="text-muted-foreground">
+                  Personal information like name and phone are managed in your role-specific profile.
+                </p>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    </Layout>
   );
 };
