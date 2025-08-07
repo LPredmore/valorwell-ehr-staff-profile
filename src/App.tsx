@@ -13,10 +13,6 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import Index from '@/pages/Index';
 import { Profile } from '@/pages/Profile';
 
-// Template page imports
-import { TemplatesPage } from '@/features/templates/pages/TemplatesPage';
-import { CreateTemplatePage } from '@/features/templates/pages/CreateTemplatePage';
-import { EditTemplatePage } from '@/features/templates/pages/EditTemplatePage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -40,36 +36,6 @@ function App() {
                 <Layout>
                   <Index />
                 </Layout>
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/templates" element={
-              <ProtectedRoute>
-                <RoleGuard allowedRoles={['clinician', 'admin']}>
-                  <Layout>
-                    <TemplatesPage />
-                  </Layout>
-                </RoleGuard>
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/templates/create" element={
-              <ProtectedRoute>
-                <RoleGuard allowedRoles={['clinician', 'admin']}>
-                  <Layout>
-                    <CreateTemplatePage />
-                  </Layout>
-                </RoleGuard>
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/templates/:id/edit" element={
-              <ProtectedRoute>
-                <RoleGuard allowedRoles={['clinician', 'admin']}>
-                  <Layout>
-                    <EditTemplatePage />
-                  </Layout>
-                </RoleGuard>
               </ProtectedRoute>
             } />
             
