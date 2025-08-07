@@ -14,6 +14,7 @@ import {
 
 const navigation = [
   { name: 'Profile', href: '/profile', icon: Settings },
+  { name: 'Templates', href: '/templates', icon: FileText },
 ];
 
 export const Sidebar: React.FC = () => {
