@@ -4,86 +4,258 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useProfile, useUpdateProfile } from '@/hooks/useProfile';
-import { Loader2 } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useProfile, useUpdateProfile, useUserRole } from '@/hooks/useProfile';
+import { useClinicians } from '@/hooks/useClinicians';
+import { Loader2, User, Mail, Phone, MapPin, Calendar } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 
 export const Profile: React.FC = () => {
-  const { data: profile, isLoading } = useProfile();
+  const { data: profile, isLoading: profileLoading } = useProfile();
+  const { data: userRole, isLoading: roleLoading } = useUserRole();
+  const { data: clinicians, isLoading: cliniciansLoading } = useClinicians();
   const updateProfile = useUpdateProfile();
+  
   const [formData, setFormData] = useState({
     email: '',
+    first_name: '',
+    last_name: '',
+    phone: '',
+    professional_name: '',
+    bio: '',
+    city: '',
+    state: '',
+    zip_code: '',
   });
+
+  // Get current clinician data if user is a clinician
+  const currentClinician = React.useMemo(() => {
+    if (userRole === 'clinician' && clinicians && profile) {
+      return clinicians.find(c => c.profile_id === profile.id);
+    }
+    return null;
+  }, [clinicians, profile, userRole]);
 
   React.useEffect(() => {
     if (profile) {
-      setFormData({
+      setFormData(prev => ({
+        ...prev,
         email: profile.email || '',
-      });
+      }));
     }
-  }, [profile]);
+    
+    if (currentClinician) {
+      setFormData(prev => ({
+        ...prev,
+        first_name: currentClinician.first_name || '',
+        last_name: currentClinician.last_name || '',
+        phone: currentClinician.phone || '',
+        professional_name: currentClinician.professional_name || '',
+        bio: currentClinician.bio || '',
+        city: currentClinician.city || '',
+        state: currentClinician.state || '',
+        zip_code: currentClinician.zip_code || '',
+      }));
+    }
+  }, [profile, currentClinician]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateProfile.mutate(formData);
+    updateProfile.mutate({ email: formData.email });
   };
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const isLoading = profileLoading || roleLoading || cliniciansLoading;
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      </Layout>
     );
   }
 
   if (!profile) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <p>No profile found</p>
-      </div>
+      <Layout>
+        <div className="flex items-center justify-center h-64">
+          <p>No profile found</p>
+        </div>
+      </Layout>
     );
   }
 
   return (
     <Layout>
-      <div className="container mx-auto p-6 max-w-2xl">
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile Settings</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={profile.email || ''}
-                  disabled
-                  className="bg-muted"
-                />
-                <p className="text-sm text-muted-foreground mt-1">
-                  Email cannot be changed here. Please contact support if needed.
-                </p>
+      <div className="container mx-auto p-6 max-w-4xl">
+        <div className="space-y-6">
+          {/* Basic Profile Info */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Account Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="email" className="flex items-center gap-2">
+                    <Mail className="h-4 w-4" />
+                    Email
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={profile.email || ''}
+                    disabled
+                    className="bg-muted"
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Email cannot be changed here. Please contact support if needed.
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="role">Role</Label>
+                  <Input
+                    id="role"
+                    type="text"
+                    value={userRole ? userRole.charAt(0).toUpperCase() + userRole.slice(1) : 'No role assigned'}
+                    disabled
+                    className="bg-muted"
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="role">Role</Label>
-                <Input
-                  id="role"
-                  type="text"
-                  value={profile.role?.[0] || 'No role assigned'}
-                  disabled
-                  className="bg-muted"
-                />
-              </div>
-              <div className="text-center py-4">
-                <p className="text-muted-foreground">
-                  Personal information like name and phone are managed in your role-specific profile.
-                </p>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          {/* Role-specific profile sections */}
+          {userRole === 'clinician' && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Professional Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="first_name">First Name</Label>
+                      <Input
+                        id="first_name"
+                        value={formData.first_name}
+                        onChange={(e) => handleInputChange('first_name', e.target.value)}
+                        placeholder="Enter your first name"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="last_name">Last Name</Label>
+                      <Input
+                        id="last_name"
+                        value={formData.last_name}
+                        onChange={(e) => handleInputChange('last_name', e.target.value)}
+                        placeholder="Enter your last name"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="professional_name">Professional Name</Label>
+                      <Input
+                        id="professional_name"
+                        value={formData.professional_name}
+                        onChange={(e) => handleInputChange('professional_name', e.target.value)}
+                        placeholder="Dr. Jane Smith, LCSW"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="phone" className="flex items-center gap-2">
+                        <Phone className="h-4 w-4" />
+                        Phone
+                      </Label>
+                      <Input
+                        id="phone"
+                        value={formData.phone}
+                        onChange={(e) => handleInputChange('phone', e.target.value)}
+                        placeholder="(555) 123-4567"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="bio">Professional Bio</Label>
+                    <Textarea
+                      id="bio"
+                      value={formData.bio}
+                      onChange={(e) => handleInputChange('bio', e.target.value)}
+                      placeholder="Tell patients about your background, specialties, and approach..."
+                      rows={4}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="city" className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        City
+                      </Label>
+                      <Input
+                        id="city"
+                        value={formData.city}
+                        onChange={(e) => handleInputChange('city', e.target.value)}
+                        placeholder="City"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="state">State</Label>
+                      <Input
+                        id="state"
+                        value={formData.state}
+                        onChange={(e) => handleInputChange('state', e.target.value)}
+                        placeholder="State"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="zip_code">ZIP Code</Label>
+                      <Input
+                        id="zip_code"
+                        value={formData.zip_code}
+                        onChange={(e) => handleInputChange('zip_code', e.target.value)}
+                        placeholder="12345"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <Button type="submit" disabled={updateProfile.isPending}>
+                      {updateProfile.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Save Changes
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          )}
+
+          {userRole === 'admin' && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Administrator Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    As an administrator, you have access to manage the platform. Personal profile information 
+                    can be managed through the clinician or client profiles as needed.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
     </Layout>
   );
