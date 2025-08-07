@@ -13,13 +13,8 @@ import {
 } from 'lucide-react';
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: Home },
-  { name: 'Profile', href: '/clinician-profile', icon: Settings },
-  { name: 'Calendar', href: '/calendar', icon: Calendar },
-  { name: 'Clients', href: '/clients', icon: Users },
-  // { name: 'Billing', href: '/billing', icon: CreditCard },
-  // { name: 'Reports', href: '/reports', icon: BarChart3 },
-  { name: 'Settings', href: '/settings', icon: Settings },
+  { name: 'Profile', href: '/profile', icon: Settings },
+  { name: 'Templates', href: '/templates', icon: FileText },
 ];
 
 export const Sidebar: React.FC = () => {
