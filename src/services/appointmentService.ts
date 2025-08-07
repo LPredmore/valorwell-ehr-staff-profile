@@ -142,12 +142,12 @@ export const createSingleAppointment = async (
     const [clientResult, clinicianResult] = await Promise.all([
       supabase
         .from('clients')
-         .select('client_first_name, client_last_name, client_email')
+        .select('client_first_name, client_last_name, client_email')
         .eq('id', appointmentData.client_id)
         .single(),
       supabase
         .from('clinicians')
-        .select('first_name, last_name, clinician_time_zone')
+        .select('clinician_professional_name, clinician_time_zone')
         .eq('id', appointmentData.clinician_id)
         .single()
     ]);
@@ -191,7 +191,7 @@ export const createSingleAppointment = async (
         video_room_url: videoRoomUrl,
         client_name: `${clientResult.data?.client_first_name || ''} ${clientResult.data?.client_last_name || ''}`.trim(),
         client_email: clientResult.data?.client_email,
-        clinician_name: `${clinicianResult.data?.first_name || ''} ${clinicianResult.data?.last_name || ''}`.trim(),
+        clinician_name: clinicianResult.data?.clinician_professional_name || 'Unknown',
         client_timezone: 'America/New_York', // Default timezone - should be configurable
         appointment_recurring: appointmentData.is_recurring || false
       })
@@ -258,7 +258,7 @@ export const createRecurringAppointments = async (
         .single(),
       supabase
         .from('clinicians')
-        .select('first_name, last_name')
+        .select('clinician_professional_name')
         .eq('id', appointmentData.clinician_id)
         .single()
     ]);
@@ -281,7 +281,7 @@ export const createRecurringAppointments = async (
       notes: appointmentData.notes,
        client_name: `${clientResult.data?.client_first_name || ''} ${clientResult.data?.client_last_name || ''}`.trim(),
        client_email: clientResult.data?.client_email,
-      clinician_name: `${clinicianResult.data?.first_name || ''} ${clinicianResult.data?.last_name || ''}`.trim(),
+      clinician_name: clinicianResult.data?.clinician_professional_name || 'Unknown',
       video_room_url: appointmentData.video_room_url || null
     };
 
