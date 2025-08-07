@@ -3,6 +3,8 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useIframeAuth } from '@/hooks/useIframeAuth';
+import { notifyParentAuth } from '@/utils/iframeUtils';
 
 interface AuthContextType {
   user: User | null;
@@ -35,6 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { shouldUseParentAuth, parentUser } = useIframeAuth();
 
   useEffect(() => {
     console.log('[AUTH_CONTEXT] Setting up auth state listener...');
@@ -61,6 +64,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Notify parent of auth changes in iframe mode
+        if (session?.user) {
+          notifyParentAuth('login', session.user);
+        } else {
+          notifyParentAuth('logout');
+        }
       }
     );
 
@@ -179,9 +189,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Use parent auth if in iframe mode and parent auth is available
+  const effectiveUser = shouldUseParentAuth && parentUser ? parentUser : user;
+  const effectiveSession = shouldUseParentAuth && parentUser ? { user: parentUser } as Session : session;
+
   const value = {
-    user,
-    session,
+    user: effectiveUser,
+    session: effectiveSession,
     loading,
     signIn,
     signUp,

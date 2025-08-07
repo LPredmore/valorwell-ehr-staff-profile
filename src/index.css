@@ -274,6 +274,28 @@
   box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2);
 }
 
+/* Iframe-specific styles */
+.iframe-mode {
+  /* Remove any fixed positioning that might break in iframe */
+  position: relative !important;
+}
+
+.iframe-mode .toaster {
+  /* Ensure toasts appear correctly in iframe */
+  position: fixed;
+  z-index: 9999;
+}
+
+/* Hide scrollbars in iframe mode to prevent double scrollbars */
+.iframe-mode::-webkit-scrollbar {
+  display: none;
+}
+
+.iframe-mode {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -281,5 +303,16 @@
   body {
     @apply bg-background text-foreground;
     font-family: "Inter", sans-serif;
+  }
+  
+  /* Ensure proper iframe rendering */
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  
+  #root {
+    height: 100%;
   }
 }
