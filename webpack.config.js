@@ -1,4 +1,5 @@
 const path = require('path');
+const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { ModuleFederationPlugin } = require('@module-federation/enhanced');
 
@@ -12,6 +13,7 @@ module.exports = {
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
     alias: { '@': path.resolve(__dirname, './src') },
+    plugins: [new TsconfigPathsPlugin()],
   },
   module: {
     rules: [
@@ -47,7 +49,7 @@ module.exports = {
       },
     }),
     new HtmlWebpackPlugin({
-      template: './index.html',
+      template: './public/index.html',
     }),
   ],
 };
