@@ -9,7 +9,7 @@ module.exports = {
   output: { publicPath: 'auto', clean: true },
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
-    plugins: [new TsconfigPathsPlugin()]
+    plugins: [new TsconfigPathsPlugin({ configFile: "./tsconfig.app.json" })]
   },
   module: {
     rules: [
@@ -27,6 +27,7 @@ module.exports = {
       name: 'staffProfile',
       filename: 'remoteEntry.js',
       exposes: { './ProfileApp': './src/App' },
+      dts: false,
       shared: {
         react: { singleton: true, eager: true },
         'react-dom': { singleton: true, eager: true },
