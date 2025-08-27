@@ -13,6 +13,8 @@ import { notifyParentNavigation, getIframeClasses } from '@/utils/iframeUtils';
 // Page imports
 import Index from '@/pages/Index';
 import { Profile } from '@/pages/Profile';
+import { Login } from '@/pages/Login';
+import { Signup } from '@/pages/Signup';
 
 // Template page imports
 import { TemplatesPage } from '@/features/templates/pages/TemplatesPage';
@@ -96,6 +98,26 @@ const IframeAwareLayout: React.FC<{ children: React.ReactNode }> = ({ children }
 const AppRoutes: React.FC = () => {
   return (
     <Routes>
+      {/* Public Routes - Not Protected */}
+      <Route 
+        path="/login" 
+        element={
+          <IframeAwareLayout>
+            <Login />
+          </IframeAwareLayout>
+        } 
+      />
+      
+      <Route 
+        path="/signup" 
+        element={
+          <IframeAwareLayout>
+            <Signup />
+          </IframeAwareLayout>
+        } 
+      />
+      
+      {/* Protected Routes */}
       <Route 
         path="/" 
         element={

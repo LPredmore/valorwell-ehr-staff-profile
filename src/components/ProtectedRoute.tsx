@@ -15,7 +15,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { data: clientStatus, isLoading: statusLoading } = useClientStatus();
   const location = useLocation();
 
-  if (loading || roleLoading || (userRole === 'client' && statusLoading)) {
+  if (loading || (user && roleLoading) || (user && userRole === 'client' && statusLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
@@ -24,7 +24,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // If user is a client with "New" status and not already on the add-client-info page, redirect them there
