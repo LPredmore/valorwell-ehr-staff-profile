@@ -9,7 +9,7 @@ import { useProfile, useUpdateProfile, useUserRole } from '@/hooks/useProfile';
 import { useClinicians } from '@/hooks/useClinicians';
 import { useIframe } from '@/context/IframeContext';
 import { notifyParentDataChange } from '@/utils/iframeUtils';
-import { Loader2, User, Mail, Phone, MapPin, Save, AlertCircle } from 'lucide-react';
+import { Loader2, User, Mail, Phone, MapPin, Save, AlertCircle, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export const Profile: React.FC = () => {
@@ -17,7 +17,7 @@ export const Profile: React.FC = () => {
   const { data: userRole, isLoading: roleLoading } = useUserRole();
   const { data: clinicians, isLoading: cliniciansLoading } = useClinicians();
   const updateProfile = useUpdateProfile();
-  const { config, sendMessage } = useIframe();
+  const { parentAuth, sendMessage } = useIframe();
   const { toast } = useToast();
   
   const [formData, setFormData] = useState({
@@ -43,6 +43,12 @@ export const Profile: React.FC = () => {
     return null;
   }, [clinicians, profile, userRole]);
 
+  // Security check: verify user can only access their own profile
+  const hasAccess = React.useMemo(() => {
+    if (!parentAuth?.user?.id || !profile?.id) return false;
+    return parentAuth.user.id === profile.id;
+  }, [parentAuth?.user?.id, profile?.id]);
+
   // Initialize form data
   React.useEffect(() => {
     if (profile) {
@@ -67,16 +73,16 @@ export const Profile: React.FC = () => {
     }
   }, [profile, currentClinician]);
 
-  // Notify parent when profile data loads (for iframe mode)
+  // Notify parent when profile data loads
   useEffect(() => {
-    if (config.isIframeMode && profile && !profileLoading) {
+    if (profile && !profileLoading && hasAccess) {
       notifyParentDataChange('profile-loaded', {
         profileId: profile.id,
         userRole,
         clinician: currentClinician,
       }, 'staff-profile');
     }
-  }, [config.isIframeMode, profile, profileLoading, userRole, currentClinician]);
+  }, [profile, profileLoading, userRole, currentClinician, hasAccess]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -91,20 +97,18 @@ export const Profile: React.FC = () => {
       // Update profile (currently only email is updateable via this hook)
       await updateProfile.mutateAsync({ email: formData.email });
 
-      // In iframe mode, notify parent of successful update
-      if (config.isIframeMode) {
-        await notifyParentDataChange('profile-updated', {
-          profileId: profile?.id,
-          updates: formData,
-          timestamp: new Date().toISOString(),
-        }, 'staff-profile');
+      // Notify parent of successful update
+      await notifyParentDataChange('profile-updated', {
+        profileId: profile?.id,
+        updates: formData,
+        timestamp: new Date().toISOString(),
+      }, 'staff-profile');
 
-        // Also send a success message to parent
-        await sendMessage('profile-save-success', {
-          message: 'Profile updated successfully',
-          profileData: formData,
-        });
-      }
+      // Send success message to parent
+      await sendMessage('profile-save-success', {
+        message: 'Profile updated successfully',
+        profileData: formData,
+      });
 
       setHasChanges(false);
       
@@ -117,13 +121,11 @@ export const Profile: React.FC = () => {
       
       const errorMessage = error instanceof Error ? error.message : 'Failed to update profile';
       
-      // Notify parent of error in iframe mode
-      if (config.isIframeMode) {
-        await sendMessage('profile-save-error', {
-          error: errorMessage,
-          timestamp: new Date().toISOString(),
-        });
-      }
+      // Notify parent of error
+      await sendMessage('profile-save-error', {
+        error: errorMessage,
+        timestamp: new Date().toISOString(),
+      });
       
       toast({
         variant: 'destructive',
@@ -137,10 +139,10 @@ export const Profile: React.FC = () => {
 
   const isLoading = profileLoading || roleLoading || cliniciansLoading;
 
-  // Loading state with iframe-optimized styling
+  // Loading state
   if (isLoading) {
     return (
-      <div className={`flex items-center justify-center ${config.isIframeMode ? 'h-full' : 'h-64'}`}>
+      <div className="h-full flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
           <p className="text-sm text-muted-foreground">Loading profile...</p>
@@ -149,9 +151,10 @@ export const Profile: React.FC = () => {
     );
   }
 
+  // No profile found
   if (!profile) {
     return (
-      <div className={`flex items-center justify-center ${config.isIframeMode ? 'h-full' : 'h-64'}`}>
+      <div className="h-full flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
           <p className="text-sm text-muted-foreground">No profile found</p>
@@ -160,25 +163,31 @@ export const Profile: React.FC = () => {
     );
   }
 
-  return (
-    <div className={`${config.isIframeMode ? 'h-full overflow-auto' : 'container mx-auto p-6 max-w-4xl'}`}>
-      <div className="space-y-6">
-        {/* Header section - conditionally styled for iframe */}
-        {!config.hideHeader && (
-          <div className="mb-6">
-            <h1 className="text-2xl font-semibold">Staff Profile</h1>
-            <p className="text-sm text-muted-foreground">
-              Manage your professional information and settings
-            </p>
-          </div>
-        )}
+  // Access denied - user trying to access different profile
+  if (!hasAccess) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <Shield className="h-8 w-8 text-destructive mx-auto mb-2" />
+          <h2 className="text-lg font-semibold mb-2">Access Denied</h2>
+          <p className="text-sm text-muted-foreground">
+            You can only view and edit your own profile.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
-        {/* Connection status for iframe mode */}
-        {config.isIframeMode && (
-          <div className="text-xs text-muted-foreground bg-muted p-2 rounded">
-            Profile Mode: {config.isIframeMode ? 'Embedded' : 'Standalone'}
-          </div>
-        )}
+  return (
+    <div className="h-full overflow-auto p-4">
+      <div className="space-y-6 max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-semibold">Staff Profile</h1>
+          <p className="text-sm text-muted-foreground">
+            Manage your professional information and settings
+          </p>
+        </div>
 
         {/* Basic Profile Info */}
         <Card>
@@ -211,7 +220,7 @@ export const Profile: React.FC = () => {
                 <Input
                   id="role"
                   type="text"
-                  value={userRole ? userRole.charAt(0).toUpperCase() + userRole.slice(1) : 'No role assigned'}
+                  value={userRole ? userRole.charAt(0).toUpperCase() + userRole.slice(1) : 'Loading...'}
                   disabled
                   className="bg-muted"
                 />
@@ -277,7 +286,7 @@ export const Profile: React.FC = () => {
                     value={formData.bio}
                     onChange={(e) => handleInputChange('bio', e.target.value)}
                     placeholder="Tell patients about your background, specialties, and approach..."
-                    rows={config.isIframeMode ? 3 : 4}
+                    rows={3}
                   />
                 </div>
 
@@ -345,12 +354,10 @@ export const Profile: React.FC = () => {
                   can be managed through the clinician or client profiles as needed.
                 </p>
                 
-                {config.isIframeMode && (
-                  <div className="mt-4 p-3 bg-muted rounded text-sm">
-                    <p className="font-medium">Embedded Mode Active</p>
-                    <p>This profile is running as an embedded application within the main EHR system.</p>
-                  </div>
-                )}
+                <div className="mt-4 p-3 bg-muted rounded text-sm">
+                  <p className="font-medium">Embedded Profile Application</p>
+                  <p>This profile is running as an embedded application for secure profile management.</p>
+                </div>
               </div>
             </CardContent>
           </Card>

@@ -4,7 +4,6 @@ import {
   getIframeConfig, 
   setupParentMessageListener, 
   postMessageToParent,
-  notifyParentAuth,
   IframeConfig
 } from '@/utils/iframeUtils';
 
@@ -22,7 +21,6 @@ interface IframeContextType {
   isReady: boolean;
   connectionStatus: 'connecting' | 'connected' | 'disconnected' | 'error';
   lastError?: string;
-  refreshConfig: () => void;
 }
 
 const IframeContext = createContext<IframeContextType | undefined>(undefined);
@@ -38,17 +36,11 @@ export const useIframe = () => {
 export const IframeProvider: React.FC<{ children: React.ReactNode }> = ({ 
   children 
 }) => {
-  const [config, setConfig] = useState<IframeConfig>(() => getIframeConfig());
+  const [config] = useState<IframeConfig>(() => getIframeConfig());
   const [parentAuth, setParentAuth] = useState<ParentAuth | undefined>();
   const [isReady, setIsReady] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('disconnected');
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('connecting');
   const [lastError, setLastError] = useState<string>();
-
-  const refreshConfig = useCallback(() => {
-    const newConfig = getIframeConfig();
-    setConfig(newConfig);
-    console.log('Iframe config refreshed:', newConfig);
-  }, []);
 
   const sendMessage = useCallback(async (type: string, data?: any): Promise<boolean> => {
     try {
@@ -69,8 +61,7 @@ export const IframeProvider: React.FC<{ children: React.ReactNode }> = ({
       return;
     }
 
-    setConnectionStatus('connecting');
-    console.log('Setting up iframe communication with config:', config);
+    console.log('Setting up iframe communication for profile-only app');
 
     // Set up message listener for parent communication
     const cleanup = setupParentMessageListener(
@@ -82,33 +73,14 @@ export const IframeProvider: React.FC<{ children: React.ReactNode }> = ({
             case 'auth-state':
               setParentAuth(data);
               setConnectionStatus('connected');
-              console.log('Parent auth state updated:', data);
-              break;
+              setIsReady(true);
+              console.log('Parent auth state received:', data);
               
-            case 'navigate':
-              // Handle navigation requests from parent
-              if (data.path) {
-                if (data.replace) {
-                  window.location.replace(`#${data.path}`);
-                } else {
-                  window.location.hash = data.path;
-                }
-                console.log('Navigated to:', data.path);
-              }
-              break;
-              
-            case 'config-update':
-              // Handle configuration updates from parent
-              setConfig(current => ({
-                ...current,
-                ...data,
-              }));
-              console.log('Config updated by parent:', data);
-              break;
-              
-            case 'refresh-auth':
-              // Handle auth refresh requests
-              notifyParentAuth('session-refresh');
+              // Notify parent that we're showing the profile
+              sendMessage('navigation', { 
+                path: '/profile',
+                timestamp: new Date().toISOString()
+              });
               break;
               
             case 'ready-ack':
@@ -123,7 +95,7 @@ export const IframeProvider: React.FC<{ children: React.ReactNode }> = ({
               break;
               
             default:
-              console.log('Unknown message type from parent:', type, data);
+              console.log('Unhandled message type from parent:', type);
           }
         } catch (error) {
           console.error('Error handling parent message:', error);
@@ -137,16 +109,15 @@ export const IframeProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     );
 
-    // Notify parent that iframe is ready and send initial state
+    // Notify parent that profile app is ready
     const initializeConnection = async () => {
       try {
         await postMessageToParent('ready', {
-          currentRoute: window.location.hash || '#/',
-          config: config,
+          currentRoute: '/profile',
+          appType: 'staff-profile',
           capabilities: {
-            navigation: true,
+            profileEdit: true,
             auth: true,
-            dataSync: true,
           },
           timestamp: new Date().toISOString(),
         });
@@ -154,7 +125,7 @@ export const IframeProvider: React.FC<{ children: React.ReactNode }> = ({
         // Request initial auth state from parent
         await postMessageToParent('request-auth-state');
         
-        console.log('Iframe initialization complete');
+        console.log('Profile app initialization complete');
       } catch (error) {
         console.error('Failed to initialize iframe connection:', error);
         setLastError(error instanceof Error ? error.message : 'Failed to connect to parent');
@@ -162,7 +133,7 @@ export const IframeProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     };
 
-    // Initialize connection with a slight delay to ensure everything is set up
+    // Initialize connection
     const initTimer = setTimeout(initializeConnection, 100);
 
     // Set up periodic health check
@@ -181,27 +152,6 @@ export const IframeProvider: React.FC<{ children: React.ReactNode }> = ({
     };
   }, [config.isIframeMode, config.parentOrigin, sendMessage, connectionStatus]);
 
-  // Handle URL parameter changes
-  useEffect(() => {
-    const handlePopState = () => {
-      refreshConfig();
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [refreshConfig]);
-
-  // Handle authentication state changes
-  useEffect(() => {
-    if (parentAuth && config.isIframeMode) {
-      console.log('Parent auth available, syncing with local state');
-      // Could integrate with local auth context here if needed
-    }
-  }, [parentAuth, config.isIframeMode]);
-
   const value: IframeContextType = {
     config,
     sendMessage,
@@ -209,7 +159,6 @@ export const IframeProvider: React.FC<{ children: React.ReactNode }> = ({
     isReady,
     connectionStatus,
     lastError,
-    refreshConfig,
   };
 
   return (
