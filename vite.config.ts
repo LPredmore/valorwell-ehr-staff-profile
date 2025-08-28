@@ -55,7 +55,7 @@ export default defineConfig(({ mode }) => ({
         assetFileNames: 'assets/[name]-[hash].[ext]',
         // Optimize chunk splitting for iframe
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
+          vendor: ['react', 'react-dom'],
           ui: ['@radix-ui/react-dialog', '@radix-ui/react-select', '@radix-ui/react-toast'],
           utils: ['@tanstack/react-query', 'date-fns', 'clsx']
         }
@@ -84,7 +84,6 @@ export default defineConfig(({ mode }) => ({
     include: [
       'react',
       'react-dom',
-      'react-router-dom',
       '@tanstack/react-query',
       '@supabase/supabase-js'
     ],
