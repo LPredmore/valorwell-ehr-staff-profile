@@ -8,7 +8,7 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: 8080,
+    port: 8081,
     headers: {
       // Allow iframe embedding
       'X-Frame-Options': 'SAMEORIGIN',
@@ -34,7 +34,7 @@ export default defineConfig(({ mode }) => ({
     }
   },
   preview: {
-    port: 8080,
+    port: 8081,
     host: "::",
     headers: {
       // Same headers for preview mode
