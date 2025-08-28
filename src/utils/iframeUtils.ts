@@ -53,14 +53,17 @@ export const getIframeConfig = (): IframeConfig => {
   const urlParams = new URLSearchParams(window.location.search);
   const isIframe = isInIframe();
   
-  return {
+  const config = {
     isIframe,
-    hideHeader: urlParams.get('hideHeader') === 'true' || import.meta.env.VITE_HIDE_HEADER === 'true',
-    hideSidebar: urlParams.get('hideSidebar') === 'true' || import.meta.env.VITE_HIDE_SIDEBAR === 'true',
-    initialRoute: urlParams.get('route') || urlParams.get('initialRoute') || '/',
+    hideHeader: urlParams.get('hideHeader') === 'true' || isIframe,
+    hideSidebar: urlParams.get('hideSidebar') === 'true' || isIframe,
+    initialRoute: urlParams.get('route') || '/profile',
     parentOrigin: urlParams.get('parentOrigin') || import.meta.env.VITE_PARENT_ORIGIN || '*',
     isIframeMode: isIframe || import.meta.env.VITE_IS_IFRAME_MODE === 'true',
   };
+  
+  console.log('getIframeConfig: Generated config:', config);
+  return config;
 };
 
 /**

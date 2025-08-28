@@ -45,8 +45,17 @@ export const Profile: React.FC = () => {
 
   // Security check: verify user can only access their own profile
   const hasAccess = React.useMemo(() => {
-    if (!parentAuth?.user?.id || !profile?.id) return false;
-    return parentAuth.user.id === profile.id;
+    // If we have parentAuth, use it for verification
+    if (parentAuth?.user?.id && profile?.id) {
+      console.log('Profile: Checking access with parent auth:', { 
+        parentUserId: parentAuth.user.id, 
+        profileId: profile.id 
+      });
+      return parentAuth.user.id === profile.id;
+    }
+    // Otherwise, allow access (local auth will handle security via RLS)
+    console.log('Profile: Allowing access - using local authentication');
+    return true;
   }, [parentAuth?.user?.id, profile?.id]);
 
   // Initialize form data

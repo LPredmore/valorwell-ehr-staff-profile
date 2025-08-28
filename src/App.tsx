@@ -16,27 +16,34 @@ const queryClient = new QueryClient({
   },
 });
 
-// App content that waits for parent authentication
+// App content that handles authentication flexibly
 const AppContent: React.FC = () => {
-  const { isReady, parentAuth, connectionStatus, lastError } = useIframe();
+  const { isReady, parentAuth, connectionStatus, lastError, config } = useIframe();
 
   useEffect(() => {
-    console.log('AppContent state:', { isReady, parentAuth, connectionStatus });
-  }, [isReady, parentAuth, connectionStatus]);
+    console.log('AppContent: Current state:', { 
+      isReady, 
+      hasParentAuth: !!parentAuth, 
+      connectionStatus,
+      isIframeMode: config.isIframeMode 
+    });
+  }, [isReady, parentAuth, connectionStatus, config.isIframeMode]);
 
-  // Show loading while establishing connection
+  // Show loading only while connecting, not waiting for auth
   if (!isReady || connectionStatus === 'connecting') {
     return (
       <div className="h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Connecting to parent application...</p>
+          <p className="text-sm text-muted-foreground">
+            {config.isIframeMode ? 'Connecting to parent application...' : 'Loading application...'}
+          </p>
         </div>
       </div>
     );
   }
 
-  // Show error if connection failed
+  // Show error only for actual connection errors, not missing auth
   if (connectionStatus === 'error') {
     return (
       <div className="h-screen flex items-center justify-center bg-background">
@@ -58,19 +65,8 @@ const AppContent: React.FC = () => {
     );
   }
 
-  // Show loading while waiting for parent authentication
-  if (!parentAuth) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Waiting for authentication...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Authentication established - render Profile
+  // Always render Profile - it will handle its own auth (parent or local)
+  console.log('AppContent: Rendering Profile component');
   return <Profile />;
 };
 

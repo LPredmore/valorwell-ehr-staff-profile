@@ -55,7 +55,10 @@ export const IframeProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   useEffect(() => {
+    console.log('IframeContext: Initializing with config:', config);
+    
     if (!config.isIframeMode) {
+      console.log('IframeContext: Not in iframe mode, setting ready');
       setIsReady(true);
       setConnectionStatus('disconnected');
       return;
@@ -63,18 +66,27 @@ export const IframeProvider: React.FC<{ children: React.ReactNode }> = ({
 
     console.log('Setting up iframe communication for profile-only app');
 
+    // Set a timeout to proceed even if no auth comes from parent
+    const authTimeout = setTimeout(() => {
+      if (!parentAuth) {
+        console.log('IframeContext: No parent auth received within timeout, proceeding with local auth');
+        setIsReady(true);
+        setConnectionStatus('connected');
+      }
+    }, 3000); // 3 second timeout
+
     // Set up message listener for parent communication
     const cleanup = setupParentMessageListener(
       (type, data, origin) => {
-        console.log('Received message from parent:', { type, data, origin });
+        console.log('IframeContext: Received message from parent:', { type, data, origin });
         
         try {
           switch (type) {
             case 'auth-state':
+              console.log('IframeContext: Setting parent auth state:', data);
               setParentAuth(data);
               setConnectionStatus('connected');
               setIsReady(true);
-              console.log('Parent auth state received:', data);
               
               // Notify parent that we're showing the profile
               sendMessage('navigation', { 
@@ -84,21 +96,21 @@ export const IframeProvider: React.FC<{ children: React.ReactNode }> = ({
               break;
               
             case 'ready-ack':
+              console.log('IframeContext: Parent acknowledged ready state');
               setIsReady(true);
               setConnectionStatus('connected');
-              console.log('Parent acknowledged ready state');
               break;
               
             case 'ping':
-              // Respond to parent ping with pong
+              console.log('IframeContext: Received ping from parent, responding with pong');
               sendMessage('pong', { timestamp: new Date().toISOString() });
               break;
               
             default:
-              console.log('Unhandled message type from parent:', type);
+              console.log('IframeContext: Unhandled message type from parent:', type);
           }
         } catch (error) {
-          console.error('Error handling parent message:', error);
+          console.error('IframeContext: Error handling parent message:', error);
           setLastError(error instanceof Error ? error.message : 'Unknown error');
           setConnectionStatus('error');
         }
@@ -112,6 +124,7 @@ export const IframeProvider: React.FC<{ children: React.ReactNode }> = ({
     // Notify parent that profile app is ready
     const initializeConnection = async () => {
       try {
+        console.log('IframeContext: Initializing connection to parent');
         await postMessageToParent('ready', {
           currentRoute: '/profile',
           appType: 'staff-profile',
@@ -123,13 +136,14 @@ export const IframeProvider: React.FC<{ children: React.ReactNode }> = ({
         });
         
         // Request initial auth state from parent
+        console.log('IframeContext: Requesting auth state from parent');
         await postMessageToParent('request-auth-state');
         
-        console.log('Profile app initialization complete');
+        console.log('IframeContext: Profile app initialization complete');
       } catch (error) {
-        console.error('Failed to initialize iframe connection:', error);
+        console.error('IframeContext: Failed to initialize iframe connection:', error);
         setLastError(error instanceof Error ? error.message : 'Failed to connect to parent');
-        setConnectionStatus('error');
+        // Don't set error status here, let the timeout handle it
       }
     };
 
@@ -145,12 +159,13 @@ export const IframeProvider: React.FC<{ children: React.ReactNode }> = ({
 
     // Cleanup function
     return () => {
+      clearTimeout(authTimeout);
       clearTimeout(initTimer);
       clearInterval(healthCheckInterval);
       cleanup();
-      console.log('Iframe context cleanup completed');
+      console.log('IframeContext: Cleanup completed');
     };
-  }, [config.isIframeMode, config.parentOrigin, sendMessage, connectionStatus]);
+  }, [config.isIframeMode, config.parentOrigin, sendMessage]);
 
   const value: IframeContextType = {
     config,
