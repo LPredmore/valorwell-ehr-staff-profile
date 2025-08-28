@@ -1,5 +1,4 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -27,8 +26,8 @@ type TemplateFormData = z.infer<typeof templateSchema>;
 export const EditTemplatePage: React.FC = () => {
   console.log('🚀 [EDIT_TEMPLATE_PAGE] Component mounted/re-rendered');
   
-  const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
+  // Profile-only app - no route params available
+  const id = 'demo-template-id';
   const { toast } = useToast();
   const { data: templates, isLoading } = useTemplates();
   const updateTemplate = useUpdateTemplate();
@@ -225,10 +224,8 @@ export const EditTemplatePage: React.FC = () => {
         description: `"${formData.name}" has been updated successfully.`,
       });
 
-      console.log('🧭 [MANUAL_SUBMIT] About to navigate to /templates');
-      navigate('/templates');
-      console.log('🧭 [MANUAL_SUBMIT] Navigate call completed');
-
+      console.log('🧭 [MANUAL_SUBMIT] Profile-only app - no navigation');
+      
     } catch (error) {
       console.error('❌ [MANUAL_SUBMIT] Update failed:', error);
       toast({
@@ -273,10 +270,7 @@ export const EditTemplatePage: React.FC = () => {
         <Button 
           type="button"
           variant="ghost" 
-          onClick={() => {
-            console.log('🧭 [NAVIGATION] Back button clicked');
-            navigate('/templates');
-          }}
+          disabled
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Templates
@@ -385,16 +379,13 @@ export const EditTemplatePage: React.FC = () => {
                  >
                    {updateTemplate.isPending ? 'Updating...' : 'Update Template'}
                  </Button>
-                 <Button
-                   type="button"
-                   variant="outline"
-                   onClick={() => {
-                     console.log('🧭 [BUTTON_CLICK] Cancel button clicked');
-                     navigate('/templates');
-                   }}
-                 >
-                   Cancel
-                 </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled
+                  >
+                    Cancel
+                  </Button>
                </div>
             </form>
           </Form>

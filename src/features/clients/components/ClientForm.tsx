@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { ArrowLeft, Save } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 const clientFormSchema = z.object({
   client_first_name: z.string().min(1, 'First name is required'),
@@ -50,8 +49,6 @@ export const ClientForm: React.FC<ClientFormProps> = ({
   isLoading,
   mode
 }) => {
-  const navigate = useNavigate();
-  
   const form = useForm<ClientFormData>({
     resolver: zodResolver(clientFormSchema),
     defaultValues: initialData || {
@@ -76,7 +73,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" onClick={() => navigate('/clients')}>
+          <Button variant="ghost" disabled>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Clients
           </Button>
@@ -414,7 +411,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate('/clients')}
+              disabled
             >
               Cancel
             </Button>

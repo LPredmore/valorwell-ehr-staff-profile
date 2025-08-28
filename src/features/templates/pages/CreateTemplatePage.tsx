@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -27,7 +26,6 @@ const templateSchema = z.object({
 type TemplateFormData = z.infer<typeof templateSchema>;
 
 export const CreateTemplatePage: React.FC = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const createTemplate = useCreateTemplate();
   const [selectedTemplate, setSelectedTemplate] = useState<PrebuiltTemplate | null>(undefined);
@@ -92,7 +90,7 @@ export const CreateTemplatePage: React.FC = () => {
         description: `"${data.name}" has been created successfully.`,
       });
 
-      navigate('/templates');
+      // Stay on current page - no navigation in profile-only app
     } catch (error) {
       toast({
         title: 'Error',
@@ -105,7 +103,7 @@ export const CreateTemplatePage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" onClick={() => navigate('/templates')}>
+        <Button variant="ghost" disabled>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Templates
         </Button>
@@ -246,7 +244,7 @@ export const CreateTemplatePage: React.FC = () => {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => navigate('/templates')}
+                  disabled
                 >
                   Cancel
                 </Button>

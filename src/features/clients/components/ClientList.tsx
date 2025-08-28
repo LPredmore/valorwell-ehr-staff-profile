@@ -9,7 +9,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Search, Filter, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 interface Client {
   id: string;
@@ -26,7 +25,6 @@ interface Client {
 
 export const ClientList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const navigate = useNavigate();
 
   const { data: clients, isLoading, error } = useQuery({
     queryKey: ['clients'],

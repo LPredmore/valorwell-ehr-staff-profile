@@ -2,7 +2,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
 import { Database } from '@/integrations/supabase/types';
 
 interface ClientData {
@@ -35,7 +34,6 @@ interface ClientDataWithId extends ClientData {
 export const useCreateClient = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   return useMutation({
     mutationFn: async (clientData: ClientData) => {
@@ -54,7 +52,6 @@ export const useCreateClient = () => {
         title: 'Success',
         description: 'Client created successfully',
       });
-      navigate(`/clients/${data.id}`);
     },
     onError: (error) => {
       toast({
@@ -70,7 +67,6 @@ export const useCreateClient = () => {
 export const useUpdateClient = (clientId: string) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   return useMutation({
     mutationFn: async (clientData: Partial<ClientData>) => {
@@ -91,7 +87,6 @@ export const useUpdateClient = (clientId: string) => {
         title: 'Success',
         description: 'Client updated successfully',
       });
-      navigate(`/clients/${data.id}`);
     },
     onError: (error) => {
       toast({

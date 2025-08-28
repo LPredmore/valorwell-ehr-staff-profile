@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Calendar, Video, Shield } from 'lucide-react';
@@ -72,16 +71,12 @@ const Index = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/signup">
-              <Button size="lg" className="w-full sm:w-auto">
-                Get Started
-              </Button>
-            </Link>
-            <Link to="/login">
-              <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                Sign In
-              </Button>
-            </Link>
+            <Button size="lg" className="w-full sm:w-auto" disabled>
+              Get Started
+            </Button>
+            <Button variant="outline" size="lg" className="w-full sm:w-auto" disabled>
+              Sign In
+            </Button>
           </div>
         </div>
       </div>

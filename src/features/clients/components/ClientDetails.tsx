@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,8 +9,8 @@ import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Edit, User, Mail, Phone, MapPin, Calendar } from 'lucide-react';
 
 export const ClientDetails: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  // Profile-only app - no route params available
+  const id = 'demo-client-id';
 
   const { data: client, isLoading, error } = useQuery({
     queryKey: ['client', id],
@@ -47,7 +46,7 @@ export const ClientDetails: React.FC = () => {
     return (
       <div className="text-center py-8">
         <p className="text-destructive">Error loading client details. Please try again.</p>
-        <Button variant="outline" onClick={() => navigate('/clients')} className="mt-4">
+        <Button variant="outline" disabled className="mt-4">
           Back to Clients
         </Button>
       </div>
@@ -71,7 +70,7 @@ export const ClientDetails: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" onClick={() => navigate('/clients')}>
+          <Button variant="ghost" disabled>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Clients
           </Button>
@@ -85,7 +84,7 @@ export const ClientDetails: React.FC = () => {
             </Badge>
           </div>
         </div>
-        <Button onClick={() => navigate(`/clients/${id}/edit`)}>
+        <Button disabled>
           <Edit className="h-4 w-4 mr-2" />
           Edit Client
         </Button>

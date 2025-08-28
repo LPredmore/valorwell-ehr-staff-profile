@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +8,6 @@ import { useTemplates, useDeleteTemplate } from '../hooks/useTemplates';
 import { useToast } from '@/hooks/use-toast';
 
 export const TemplatesList: React.FC = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const { data: templates, isLoading } = useTemplates();
   const deleteTemplate = useDeleteTemplate();
@@ -52,7 +50,7 @@ export const TemplatesList: React.FC = () => {
               Create and manage reusable form templates for your practice
             </CardDescription>
           </div>
-          <Button onClick={() => navigate('/templates/create')}>
+          <Button disabled>
             <Plus className="h-4 w-4 mr-2" />
             Create Template
           </Button>
@@ -64,7 +62,7 @@ export const TemplatesList: React.FC = () => {
             <div className="text-muted-foreground mb-4">
               No templates found. Create your first template to get started.
             </div>
-            <Button onClick={() => navigate('/templates/create')}>
+            <Button disabled>
               <Plus className="h-4 w-4 mr-2" />
               Create Your First Template
             </Button>
@@ -94,7 +92,7 @@ export const TemplatesList: React.FC = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => navigate(`/templates/${template.id}/edit`)}
+                        disabled
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
