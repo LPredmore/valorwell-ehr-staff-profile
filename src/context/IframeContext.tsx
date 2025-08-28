@@ -69,7 +69,8 @@ export const IframeProvider: React.FC<{ children: React.ReactNode }> = ({
     // Set a timeout to proceed even if no auth comes from parent
     const authTimeout = setTimeout(() => {
       if (!parentAuth) {
-        console.log('IframeContext: No parent auth received within timeout, proceeding with local auth');
+        const timestamp = new Date().toISOString();
+        console.log(`[IframeContext] ${timestamp} - AUTH TIMEOUT: No parent auth received within 3s, proceeding with local auth`);
         setIsReady(true);
         setConnectionStatus('connected');
       }
@@ -78,36 +79,47 @@ export const IframeProvider: React.FC<{ children: React.ReactNode }> = ({
     // Set up message listener for parent communication
     const cleanup = setupParentMessageListener(
       (type, data, origin) => {
-        console.log('IframeContext: Received message from parent:', { type, data, origin });
+        const timestamp = new Date().toISOString();
+        console.log(`[IframeContext] ${timestamp} - Received message from parent:`, { 
+          type, 
+          data, 
+          origin,
+          timestamp 
+        });
         
         try {
           switch (type) {
             case 'auth-state':
-              console.log('IframeContext: Setting parent auth state:', data);
+              console.log(`[IframeContext] ${timestamp} - Setting parent auth state:`, {
+                userId: data?.user?.id,
+                hasToken: !!data?.token,
+                sessionId: data?.sessionId
+              });
               setParentAuth(data);
               setConnectionStatus('connected');
               setIsReady(true);
               
               // Notify parent that we're showing the profile
+              console.log(`[IframeContext] ${timestamp} - Notifying parent of navigation to profile`);
               sendMessage('navigation', { 
                 path: '/profile',
-                timestamp: new Date().toISOString()
+                timestamp 
               });
               break;
               
             case 'ready-ack':
-              console.log('IframeContext: Parent acknowledged ready state');
+              console.log(`[IframeContext] ${timestamp} - Parent acknowledged ready state`);
               setIsReady(true);
               setConnectionStatus('connected');
               break;
               
             case 'ping':
-              console.log('IframeContext: Received ping from parent, responding with pong');
-              sendMessage('pong', { timestamp: new Date().toISOString() });
+              console.log(`[IframeContext] ${timestamp} - Received ping from parent, responding with pong`);
+              sendMessage('pong', { timestamp });
               break;
               
             default:
-              console.log('IframeContext: Unhandled message type from parent:', type);
+              console.log(`[IframeContext] ${timestamp} - Unhandled message type from parent:`, type);
           }
         } catch (error) {
           console.error('IframeContext: Error handling parent message:', error);
@@ -124,24 +136,30 @@ export const IframeProvider: React.FC<{ children: React.ReactNode }> = ({
     // Notify parent that profile app is ready
     const initializeConnection = async () => {
       try {
-        console.log('IframeContext: Initializing connection to parent');
-        await postMessageToParent('ready', {
+        const timestamp = new Date().toISOString();
+        console.log(`[IframeContext] ${timestamp} - INIT: Initializing connection to parent`);
+        
+        const readyMessage = {
           currentRoute: '/profile',
           appType: 'staff-profile',
           capabilities: {
             profileEdit: true,
             auth: true,
           },
-          timestamp: new Date().toISOString(),
-        });
+          timestamp,
+        };
+        
+        console.log(`[IframeContext] ${timestamp} - INIT: Sending ready message:`, readyMessage);
+        await postMessageToParent('ready', readyMessage);
         
         // Request initial auth state from parent
-        console.log('IframeContext: Requesting auth state from parent');
+        console.log(`[IframeContext] ${timestamp} - INIT: Requesting auth state from parent`);
         await postMessageToParent('request-auth-state');
         
-        console.log('IframeContext: Profile app initialization complete');
+        console.log(`[IframeContext] ${timestamp} - INIT: Profile app initialization complete`);
       } catch (error) {
-        console.error('IframeContext: Failed to initialize iframe connection:', error);
+        const timestamp = new Date().toISOString();
+        console.error(`[IframeContext] ${timestamp} - INIT ERROR: Failed to initialize iframe connection:`, error);
         setLastError(error instanceof Error ? error.message : 'Failed to connect to parent');
         // Don't set error status here, let the timeout handle it
       }

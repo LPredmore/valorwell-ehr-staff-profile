@@ -100,7 +100,7 @@ export const postMessageToParent = (
     const messageId = `${type}_${Date.now()}_${Math.random()}`;
     
     const message = {
-      source: 'valorwell-staff-profile',
+      source: 'valorwell-microfrontend',
       type,
       data,
       messageId,
@@ -112,8 +112,15 @@ export const postMessageToParent = (
 
     const sendMessage = () => {
       try {
+        console.log(`[iframeUtils] Sending message to parent (attempt ${attempt + 1}):`, {
+          type,
+          data,
+          messageId,
+          parentOrigin: config.parentOrigin,
+          timestamp: new Date().toISOString()
+        });
         window.parent.postMessage(message, config.parentOrigin);
-        console.log(`Message sent to parent (attempt ${attempt + 1}):`, type, data);
+        console.log(`[iframeUtils] Message sent successfully to parent (attempt ${attempt + 1}):`, type);
         
         if (!requireAck) {
           resolve(true);
@@ -187,20 +194,34 @@ export const setupParentMessageListener = (
       }
 
       // Validate source if required
-      if (validateSource && event.data.target !== 'valorwell-staff-profile') {
+      if (validateSource && event.data.target !== 'valorwell-microfrontend') {
+        console.log('[iframeUtils] Message validation: Source mismatch', {
+          expected: 'valorwell-microfrontend',
+          received: event.data.target,
+          messageType: event.data.type
+        });
         return;
       }
 
-      console.log('Received message from parent:', event.data);
+      console.log('[iframeUtils] Received message from parent:', {
+        type: event.data.type,
+        data: event.data.data,
+        origin: event.origin,
+        messageId: event.data.messageId,
+        timestamp: new Date().toISOString()
+      });
       callback(event.data.type, event.data.data, event.origin);
 
       // Send acknowledgment if requested
       if (event.data.requireAck) {
-        window.parent?.postMessage({
-          source: 'valorwell-staff-profile',
+        const ackMessage = {
+          source: 'valorwell-microfrontend',
           type: 'ack',
           messageId: event.data.messageId,
-        }, event.origin);
+          timestamp: new Date().toISOString(),
+        };
+        console.log('[iframeUtils] Sending acknowledgment:', ackMessage);
+        window.parent?.postMessage(ackMessage, event.origin);
       }
     } catch (error) {
       console.error('Error handling parent message:', error, event);
