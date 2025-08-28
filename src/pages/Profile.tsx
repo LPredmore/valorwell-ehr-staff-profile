@@ -17,7 +17,7 @@ export const Profile: React.FC = () => {
   const { data: userRole, isLoading: roleLoading } = useUserRole();
   const { data: clinicians, isLoading: cliniciansLoading } = useClinicians();
   const updateProfile = useUpdateProfile();
-  const { parentAuth, sendMessage } = useIframe();
+  const { parentAuth, sendMessage, config } = useIframe();
   const { toast } = useToast();
   
   const [formData, setFormData] = useState({
@@ -43,20 +43,39 @@ export const Profile: React.FC = () => {
     return null;
   }, [clinicians, profile, userRole]);
 
-  // Security check: verify user can only access their own profile
+  // Flexible access control - prioritize parent auth but allow local auth fallback
   const hasAccess = React.useMemo(() => {
-    // If we have parentAuth, use it for verification
+    console.log('Profile: Checking access...', {
+      hasParentAuth: !!parentAuth?.user?.id,
+      hasLocalProfile: !!profile?.id,
+      parentUserId: parentAuth?.user?.id,
+      profileId: profile?.id,
+      userRole,
+      isIframeMode: config.isIframeMode
+    });
+
+    // If we have parent authentication, verify it matches profile
     if (parentAuth?.user?.id && profile?.id) {
-      console.log('Profile: Checking access with parent auth:', { 
-        parentUserId: parentAuth.user.id, 
-        profileId: profile.id 
-      });
-      return parentAuth.user.id === profile.id;
+      const hasParentAccess = parentAuth.user.id === profile.id;
+      console.log('Profile: Parent auth access check:', hasParentAccess);
+      return hasParentAccess;
     }
-    // Otherwise, allow access (local auth will handle security via RLS)
-    console.log('Profile: Allowing access - using local authentication');
-    return true;
-  }, [parentAuth?.user?.id, profile?.id]);
+    
+    // If we're in iframe mode but no parent auth, allow access (fallback to local auth)
+    if (config.isIframeMode && !parentAuth?.user?.id) {
+      console.log('Profile: Iframe mode without parent auth - allowing local auth access');
+      return true;
+    }
+    
+    // For standalone mode or when we have a valid user, allow access
+    if (!config.isIframeMode || profile?.id) {
+      console.log('Profile: Standalone mode or valid profile - allowing access');
+      return true;
+    }
+    
+    console.log('Profile: Access denied - no valid authentication');
+    return false;
+  }, [parentAuth?.user?.id, profile?.id, userRole, config.isIframeMode]);
 
   // Initialize form data
   React.useEffect(() => {

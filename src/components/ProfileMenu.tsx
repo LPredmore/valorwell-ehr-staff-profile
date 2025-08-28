@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useProfile, useUserRole } from '@/hooks/useProfile';
 import { LogOut, User, Settings } from 'lucide-react';
 import {

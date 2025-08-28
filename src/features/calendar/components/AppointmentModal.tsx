@@ -19,7 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { AppointmentEvent, AppointmentStatus } from '../types/calendar';
 import { format } from 'date-fns';
 import { useCreateDailyRoom } from '@/features/telehealth/hooks/useTelehealth';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { createRecurringAppointments } from '@/services/appointmentService';
 
 interface AppointmentType {

@@ -52,17 +52,26 @@ export const isInIframe = (): boolean => {
 export const getIframeConfig = (): IframeConfig => {
   const urlParams = new URLSearchParams(window.location.search);
   const isIframe = isInIframe();
+
+  console.log('getIframeConfig: Determining configuration...', {
+    isIframe,
+    urlParams: Object.fromEntries(urlParams.entries()),
+    envIframeMode: import.meta.env.VITE_IS_IFRAME_MODE,
+    envParentOrigin: import.meta.env.VITE_PARENT_ORIGIN,
+    envHideHeader: import.meta.env.VITE_HIDE_HEADER,
+    envHideSidebar: import.meta.env.VITE_HIDE_SIDEBAR
+  });
   
   const config = {
     isIframe,
-    hideHeader: urlParams.get('hideHeader') === 'true' || isIframe,
-    hideSidebar: urlParams.get('hideSidebar') === 'true' || isIframe,
+    hideHeader: urlParams.get('hideHeader') === 'true' || import.meta.env.VITE_HIDE_HEADER === 'true' || isIframe,
+    hideSidebar: urlParams.get('hideSidebar') === 'true' || import.meta.env.VITE_HIDE_SIDEBAR === 'true' || isIframe,
     initialRoute: urlParams.get('route') || '/profile',
     parentOrigin: urlParams.get('parentOrigin') || import.meta.env.VITE_PARENT_ORIGIN || '*',
     isIframeMode: isIframe || import.meta.env.VITE_IS_IFRAME_MODE === 'true',
   };
   
-  console.log('getIframeConfig: Generated config:', config);
+  console.log('getIframeConfig: Final configuration:', config);
   return config;
 };
 

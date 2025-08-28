@@ -2,7 +2,7 @@
 import React from 'react';
 import { ProfileMenu } from '@/components/ProfileMenu';
 import { usePracticeInfo } from '@/hooks/usePracticeInfo';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useClinicians } from '@/hooks/useClinicians';
 
 export const Header: React.FC = () => {
